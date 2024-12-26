@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorting Visualizer</title>
+    <style>
+        /* animasyon */
+        .array-bar {
+            display: inline-block;
+            width: 30px;
+            margin: 2px;
+            background-color: #4CAF50;
+        }
+
+        #array-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            height: 150px;
+            position: relative;
+        }
+
+        /* Algoritma isminin hizalanmasi ve ortalanmasi */
+        #algorithm-name {
+            text-align: center; /* Metni yatayda ortalar */
+            margin-top: 10px;   /* Animasyon ile metin arasina bosluk ekler */
+            font-size: 1.5em;   /* Yazi boyutunu buyutur */
+            font-weight: bold;  /* Yaziyi kalin yapar */
+            position: absolute;
+            bottom: 100px;       /* Animasyonun hemen altinda hizalar */
+            left: 50%;
+            transform: translateX(-50%); /* Yatayda tam ortalar */
+        }
+
+        /* Diger temel stiller */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Kontrolleri yatayda yerlestirmek icin flexbox */
+        #controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px; /* Buton ile select arasina bosluk ekler */
+            margin-top: 20px;
+        }
+
+        #algorithm-select {
+            padding: 5px 10px;
+            font-size: 1em;
+        }
+
+        button {
+            padding: 6px 12px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Sorting Algorithms Visualizer</h1>
+    
+    <h2>Choose Sorting Algorithm:</h2>
+    <div id="controls">
+        <select id="algorithm-select">
+            <option value="bubble">Bubble Sort</option>
+            <option value="insertion">Insertion Sort</option>
+            <option value="selection">Selection Sort</option>
+            <option value="merge">Merge Sort</option>
+            <option value="heap">Heap Sort</option>
+            <option value="radix">Radix Sort</option>
+        </select>
+        <button onclick="startSorting()">Start Sorting</button>
+    </div>
+
+    <h2>Random Data:</h2>
+    <div id="data-display"></div>
+
+    <h2>Sort Steps:</h2>
+    <div id="array-container"></div>
+
+    <!-- Algoritma adi burada gorunecek -->
+    <h2 id="algorithm-name"></h2>
+
+    <script>
+        let randomData = [];
+
+        // Sayfa yuklendiginde rastgele verileri backend'den al
+        window.onload = function() {
+            fetch('/get-random-data')
+                .then(response => response.json())
+                .then(data => {
+                    randomData = data;
+                    displayData(randomData);
+                })
+        }
+
+        // Veriyi ekranda gorsel olarak gostermek
+        function displayData(data) {
+            const dataDisplay = document.getElementById('data-display');
+            dataDisplay.innerHTML = "Array: " + data.join(', ');
+
+            const arrayContainer = document.getElementById('array-container');
+            arrayContainer.innerHTML = '';
+            data.forEach(value => {
+                const bar = document.createElement('div');
+                bar.classList.add('array-bar');
+                bar.style.height = value + 'px';
+                arrayContainer.appendChild(bar);
+            });
+        }
+
+        // Sorting algoritmasini baslat
+        function startSorting() {
+            const algorithm = document.getElementById('algorithm-select').value;
+            
+            // Algoritma ismini guncelle
+            document.getElementById('algorithm-name').innerText = `Sorting with: ${algorithm.charAt(0).toUpperCase() + algorithm.slice(1)} Sort`;
+
+            fetch(`/sort/${algorithm}`, { method: 'POST' })
+                .then(response => response.json())
+                .then(steps => {
+                    animateSorting(steps);
+                });
+        }
+
+        // Sorting algoritmalarini animasyonla goster
+        function animateSorting(steps) {
+            let stepIndex = 0;
+
+            function animateStep() {
+                if (stepIndex < steps.length) {
+                    displayData(steps[stepIndex]);
+                    stepIndex++;
+                    setTimeout(animateStep, 50); // Her adim arasinda 50ms bekle!! <--HIZ
+                }
+            }
+            animateStep();
+        }
+
+    </script>
+</body>
+</html>
